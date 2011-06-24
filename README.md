@@ -10,6 +10,7 @@ Service
 -------
 
 ::
+
     use Ano\Bundle\GoogleMapsBundle\Service\GeocodeAPIQuery;
 
     // ...
@@ -36,6 +37,7 @@ Validator
 ---------
 
 ::
+
     <property name="address">
         <constraint name="Ano\Bundle\GoogleMapsBundle\Validator\Constraints\Address">
             <option name="invalidAddressMessage">address.InvalidAddress</option>
