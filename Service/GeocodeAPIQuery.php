@@ -26,6 +26,9 @@ class GeocodeAPIQuery extends APIQueryAbstract
         parent::__construct($parameters, $format);
     }
 
+    /**
+     * @return Ano\Bundle\GoogleMapsBundle\Model\GeocodeAPIResult
+     */
     protected function parseResponse($response)
     {
         switch(mb_strtolower($this->format)) {
