@@ -9,8 +9,6 @@ Very fast doc :-)
 Service
 -------
 
-::
-
     use Ano\Bundle\GoogleMapsBundle\Service\GeocodeAPIQuery;
 
     // ...
@@ -36,7 +34,6 @@ Service
 Validator
 ---------
 
-::
 
     <property name="address">
         <constraint name="Ano\Bundle\GoogleMapsBundle\Validator\Constraints\Address">
