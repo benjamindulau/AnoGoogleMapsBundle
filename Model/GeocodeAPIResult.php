@@ -9,10 +9,17 @@
 
 namespace Ano\Bundle\GoogleMapsBundle\Model;
 
-use HttpMessage;
 
-class GeocodeAPIResult implements APIResultInterface
+class GeocodeAPIResult extends APIResultAbstract
 {
+    const STATUS_OK = 'OK';
+    const STATUS_ZERO_RESULTS = 'ZERO_RESULTS';
+    const STATUS_OVER_QUERY_LIMIT = 'OVER_QUERY_LIMIT';
+    const STATUS_REQUEST_DENIED = 'REQUEST_DENIED';
+    const STATUS_INVALID_REQUEST = 'INVALID_REQUEST';
+    const STATUS_INVALID_RESPONSE = 'INVALID_RESPONSE';
+    const STATUS_NOT_SPECIFIC_ENOUGH = 'NOT_SPECIFIC_ENOUGH';
+
     /* @var GeocodeAddress */
     protected $address;
 
@@ -20,7 +27,7 @@ class GeocodeAPIResult implements APIResultInterface
     protected $geometry;
     
 
-    public function __construct(GeocodeAddress $address, GeocodeGeometry $geometry)
+    public function __construct(GeocodeAddress $address = null, GeocodeGeometry $geometry = null)
     {
         $this->address = $address;
         $this->geometry = $geometry;

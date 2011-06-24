@@ -15,8 +15,9 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 abstract class APIQueryAbstract
 {
     protected $serviceUri;
-    protected $parameters;
+    public $parameters;
     protected $response;
+    protected $result;
     protected $format;
     protected $allowedFormats = array();
 
@@ -60,12 +61,15 @@ abstract class APIQueryAbstract
         $url.= '/' . $this->getFormat();
         
         $request = new APIHttpRequest($url);
-        $request->getQuery()->add($this->parameters->all());
+        $request->query->add($this->parameters->all());
         $response = $request->getResponse();
 
         return $this->parseResponse($response);
     }
 
+    /**
+     * @return \Ano\Bundle\GoogleMapsBundle\Model\APIResultAbstract
+     */
     abstract protected function parseResponse($response);
 
 }

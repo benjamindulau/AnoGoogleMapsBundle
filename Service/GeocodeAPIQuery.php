@@ -13,7 +13,6 @@ use Ano\Bundle\GoogleMapsBundle\Model\GeocodeAPIResult;
 use Ano\Bundle\GoogleMapsBundle\Model\GeocodeAddress;
 use Ano\Bundle\GoogleMapsBundle\Model\GeocodeGeometry;
 
-use HttpMessage;
 
 class GeocodeAPIQuery extends APIQueryAbstract
 {
@@ -22,6 +21,8 @@ class GeocodeAPIQuery extends APIQueryAbstract
     public function __construct(array $parameters = array(), $format = 'json')
     {
         $this->allowedFormats = array('json', 'xml');
+        $this->result = new GeocodeAPIResult();
+        
         parent::__construct($parameters, $format);
     }
 
@@ -29,23 +30,43 @@ class GeocodeAPIQuery extends APIQueryAbstract
     {
         switch(mb_strtolower($this->format)) {
             case 'json':
-                $result = $this->parseJson($response);
+                $this->parseJson($response);
             break;
 
             case 'xml':
-                $result = $this->parseXml($response);
+                $this->parseXml($response);
             break;
         }
 
-        return $result;
+        return $this->result;
     }
 
     protected function parseJson($json)
     {
-        $data = json_decode($json, true);
-        if (is_array($data) && array_key_exists('results', $data)) {
-            $data = $data['results'][0];
+        $response = json_decode($json, true);
+        if (!is_array($response)) {
+            $this->setResultStatus(GeocodeAPIResult::STATUS_INVALID_RESPONSE, false);
+            return;
         }
+        
+        if (!array_key_exists('results', $response) || !array_key_exists('status', $response)) {
+            $this->setResultStatus(GeocodeAPIResult::STATUS_INVALID_RESPONSE, false);
+            return;
+        }
+
+        $resultCount = count($response['results']);
+        if ($resultCount <= 0) {
+            $this->setResultStatus(GeocodeAPIResult::STATUS_ZERO_RESULTS, false);
+            return;
+        }
+
+        if ($resultCount > 1) {
+            $this->setResultStatus(GeocodeAPIResult::STATUS_NOT_SPECIFIC_ENOUGH, false);
+            return;
+        }
+
+        $data = $response['results'][0];
+        $status = $response['status'];
 
         $arrayData = array(
             'address' => array(),
@@ -71,7 +92,7 @@ class GeocodeAPIQuery extends APIQueryAbstract
         $arrayData['geometry']['latitude'] = $data['geometry']['location']['lat'];
         $arrayData['geometry']['longitude'] = $data['geometry']['location']['lng'];
 
-        return $this->buildResult($arrayData);
+        return $this->buildResult($arrayData, $status);
     }
 
     private function parseXml($xml)
@@ -79,7 +100,7 @@ class GeocodeAPIQuery extends APIQueryAbstract
         // TODO
     }
 
-    private function buildResult(array $arrayData)
+    private function buildResult(array $arrayData, $status)
     {
         $address = new GeocodeAddress();
         if (array_key_exists('street_number', $arrayData['address'])) {
@@ -111,6 +132,46 @@ class GeocodeAPIQuery extends APIQueryAbstract
         $geometry->setLatitude($arrayData['geometry']['latitude']);
         $geometry->setLongitude($arrayData['geometry']['longitude']);
 
-        return new GeocodeAPIResult($address, $geometry);
+        $this->result->setAddress($address);
+        $this->result->setGeometry($geometry);
+        $this->result->setSuccess(true);
+
+        $this->buildStatus($status);
+
+        return $this->result;
+    }
+
+    protected function buildStatus($status)
+    {
+        switch(mb_strtolower($status)) {
+            case 'ok':
+                $this->setResultStatus(GeocodeAPIResult::STATUS_OK, true);
+            break;
+
+            case 'zero_results':
+                $this->setResultStatus(GeocodeAPIResult::STATUS_ZERO_RESULTS, false);
+            break;
+
+            case 'over_query_limit':
+                $this->setResultStatus(GeocodeAPIResult::STATUS_OVER_QUERY_LIMIT, false);
+            break;
+
+            case 'request_denied':
+                $this->setResultStatus(GeocodeAPIResult::STATUS_REQUEST_DENIED, false);
+            break;
+
+            case 'invalid_request':
+                $this->setResultStatus(GeocodeAPIResult::STATUS_INVALID_REQUEST, false);
+            break;
+
+            default:
+                $this->setResultStatus(GeocodeAPIResult::STATUS_INVALID_RESPONSE, false);
+        }
+    }
+
+    protected function setResultStatus($status, $success)
+    {
+        $this->result->setStatus($status);
+        $this->result->setSuccess($success);
     }
 }

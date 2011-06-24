@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * This file is part of the AnoGoogleMapsBundle
+ *
+ * (c) anonymation <contact@anonymation.com>
+ *
+ */
+
 namespace Ano\Bundle\GoogleMapsBundle\Service;
 
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -11,7 +18,7 @@ class APIHttpRequest
     protected $url;
 
     /* @var ParameterBag */
-    protected $query;
+    public $query;
 
 
     public function __construct($url = null, array $query = array())
