@@ -49,6 +49,11 @@ class AddressValidator extends ConstraintValidator
 
             return false;
         }
+        else if ($result->getItemCount() > 1) {
+            $this->setMessage($constraint->notSpecificEnoughMessage);
+
+            return false;
+        }
 
         return true;
     }

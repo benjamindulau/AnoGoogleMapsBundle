@@ -10,6 +10,7 @@
 namespace Ano\Bundle\GoogleMapsBundle\Service;
 
 use Symfony\Component\HttpFoundation\ParameterBag;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 
 abstract class APIQueryAbstract
@@ -20,6 +21,7 @@ abstract class APIQueryAbstract
     protected $result;
     protected $format;
     protected $allowedFormats = array();
+    protected $dispatcher;
 
     public function __construct(array $parameters = array(), $format)
     {
@@ -72,4 +74,16 @@ abstract class APIQueryAbstract
      */
     abstract protected function parseResponse($response);
 
+    /**
+     * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
+     */
+    public function getDispatcher()
+    {
+        return $this->dispatcher;
+    }
+
+    public function setDispatcher(EventDispatcherInterface $dispatcher)
+    {
+        $this->dispatcher = $dispatcher;
+    }
 }

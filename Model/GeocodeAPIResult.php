@@ -20,6 +20,8 @@ class GeocodeAPIResult extends APIResultAbstract
     const STATUS_INVALID_RESPONSE = 'INVALID_RESPONSE';
     const STATUS_NOT_SPECIFIC_ENOUGH = 'NOT_SPECIFIC_ENOUGH';
 
+    protected $items = array();
+
     /* @var GeocodeAddress */
     protected $address;
 
@@ -65,4 +67,36 @@ class GeocodeAPIResult extends APIResultAbstract
         return $this->geometry;
     }
 
+    public function setItems($items)
+    {
+        $this->items = $items;
+    }
+
+    public function getItems()
+    {
+        return $this->items;
+    }
+
+    public function addItem(GeocodeAPIResultItem $item)
+    {
+        $this->items[] = $item;
+    }
+
+    /**
+     * @param integer $index
+     * @return \Ano\Bundle\GoogleMapsBundle\Model\GeocodeAPIResultItem
+     */
+    public function getItem($index)
+    {
+        if (isset($this->items[$index])) {
+            return $this->items[$index];
+        }
+
+        return false;
+    }
+
+    public function getItemCount()
+    {
+        return count($this->items);
+    }
 }

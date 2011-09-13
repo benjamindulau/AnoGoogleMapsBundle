@@ -10,8 +10,12 @@
 namespace Ano\Bundle\GoogleMapsBundle\Service;
 
 use Ano\Bundle\GoogleMapsBundle\Model\GeocodeAPIResult;
+use Ano\Bundle\GoogleMapsBundle\Model\GeocodeAPIResultItem;
 use Ano\Bundle\GoogleMapsBundle\Model\GeocodeAddress;
 use Ano\Bundle\GoogleMapsBundle\Model\GeocodeGeometry;
+
+use Ano\Bundle\GoogleMapsBundle\AnoGoogleMapsEvents;
+use Ano\Bundle\GoogleMapsBundle\Event\GeocodeQueryEvent;
 
 
 class GeocodeAPIQuery extends APIQueryAbstract
@@ -31,6 +35,11 @@ class GeocodeAPIQuery extends APIQueryAbstract
      */
     protected function parseResponse($response)
     {
+        if (null !== $this->dispatcher) {
+            $event = new GeocodeQueryEvent($this);
+            $this->dispatcher->dispatch(AnoGoogleMapsEvents::POST_QUERY, $event);
+        }
+
         switch(mb_strtolower($this->format)) {
             case 'json':
                 $this->parseJson($response);
@@ -63,39 +72,41 @@ class GeocodeAPIQuery extends APIQueryAbstract
             return;
         }
 
-        if ($resultCount > 1) {
-            $this->setResultStatus(GeocodeAPIResult::STATUS_NOT_SPECIFIC_ENOUGH, false);
-            return;
-        }
+//        if ($resultCount > 1) {
+//            $this->setResultStatus(GeocodeAPIResult::STATUS_NOT_SPECIFIC_ENOUGH, false);
+//            return;
+//        }
 
-        $data = $response['results'][0];
-        $status = $response['status'];
+        foreach($response['results'] as $data) {
+            $arrayData = array(
+                'address' => array(),
+                'geometry' => array()
+            );
 
-        $arrayData = array(
-            'address' => array(),
-            'geometry' => array()
-        );
-
-        // parsing address
-        foreach($data['address_components'] as $addressPart) {
-            if (array_key_exists('types', $addressPart)) {
-                foreach($addressPart['types'] as $type) {
-                    if ('political' != $type) {
-                        $arrayData['address'][$type] = $addressPart;
+            // parsing address
+            foreach($data['address_components'] as $addressPart) {
+                if (array_key_exists('types', $addressPart)) {
+                    foreach($addressPart['types'] as $type) {
+                        if ('political' != $type) {
+                            $arrayData['address'][$type] = $addressPart;
+                        }
+                        unset($arrayData['address'][$type]['types']);
                     }
-                    unset($arrayData['address'][$type]['types']);
                 }
             }
-        }
-        if (array_key_exists('formatted_address', $data)) {
-            $arrayData['address']['formatted_address'] = $data['formatted_address'];
+            if (array_key_exists('formatted_address', $data)) {
+                $arrayData['address']['formatted_address'] = $data['formatted_address'];
+            }
+
+            // parsing geometry
+            $arrayData['geometry']['latitude'] = $data['geometry']['location']['lat'];
+            $arrayData['geometry']['longitude'] = $data['geometry']['location']['lng'];
+
+            $this->result->addItem($this->buildResult($arrayData));
+            $this->result->setSuccess(true);
         }
 
-        // parsing geometry
-        $arrayData['geometry']['latitude'] = $data['geometry']['location']['lat'];
-        $arrayData['geometry']['longitude'] = $data['geometry']['location']['lng'];
-
-        return $this->buildResult($arrayData, $status);
+        $this->buildStatus($response['status']);
     }
 
     private function parseXml($xml)
@@ -103,8 +114,9 @@ class GeocodeAPIQuery extends APIQueryAbstract
         // TODO
     }
 
-    private function buildResult(array $arrayData, $status)
+    private function buildResult(array $arrayData)
     {
+        $item = new GeocodeAPIResultItem();
         $address = new GeocodeAddress();
         if (array_key_exists('street_number', $arrayData['address'])) {
             $address->setStreetNumber($arrayData['address']['street_number']['long_name']);
@@ -135,13 +147,10 @@ class GeocodeAPIQuery extends APIQueryAbstract
         $geometry->setLatitude($arrayData['geometry']['latitude']);
         $geometry->setLongitude($arrayData['geometry']['longitude']);
 
-        $this->result->setAddress($address);
-        $this->result->setGeometry($geometry);
-        $this->result->setSuccess(true);
+        $item->setAddress($address);
+        $item->setGeometry($geometry);
 
-        $this->buildStatus($status);
-
-        return $this->result;
+        return $item;
     }
 
     protected function buildStatus($status)
