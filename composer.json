@@ -1,0 +1,26 @@
+{
+    "name":         "ano/google-maps-bundle",
+    "description":  "Anonymation Google Maps bundle",
+    "keywords":     ["google", "map", "google-maps"],
+    "type":         "symfony-bundle",
+    "license":      "MIT",
+    "authors": [
+        {
+            "name":     "Benjamin Dulau",
+            "email":    "benjamin.dulau@anonymation.com",
+            "homepage": "http://www.anonymation.com"
+        }
+    ],
+    "require": {
+        "ano/system-bundle": "*"
+    },
+    "autoload": {
+        "psr-0": { "Ano\\Bundle\\GoogleMapsBundle": "" }
+    },
+    "target-dir": "Ano/Bundle/GoogleMapsBundle",
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
