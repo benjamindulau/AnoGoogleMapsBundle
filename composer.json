@@ -12,15 +12,10 @@
         }
     ],
     "require": {
-        "ano/system-bundle": "*"
+        "symfony/framework-bundle": "2.0.*"
     },
     "autoload": {
         "psr-0": { "Ano\\Bundle\\GoogleMapsBundle": "" }
     },
-    "target-dir": "Ano/Bundle/GoogleMapsBundle",
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.0-dev"
-        }
-    }
+    "target-dir": "Ano/Bundle/GoogleMapsBundle"
 }
